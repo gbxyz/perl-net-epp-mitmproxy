@@ -188,7 +188,6 @@ sub rewrite_command {
 
 =head1 REWRITING RESPONSES
 
-
 To rewrite EPP commands before they're sent to the remote server, you must
 implement your own C<rewrite_response()> method.
 

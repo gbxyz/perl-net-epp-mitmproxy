@@ -1,7 +1,7 @@
 # SYNOPSIS
 
     package My::Proxy::Server;
-    use base qw(ICANN::RST::EPP::Proxy);
+    use base qw(Net::EPP::MITMProxy);
 
     sub rewrite_command {
         my ($self, $xml) = @_;
@@ -27,7 +27,7 @@
 
 # INTRODUCTION
 
-This module implements an EPP proxy server that acts as a man-in-the-middle
+This module implements an EPP proxy server that acts as a machine-in-the-middle
 between client and server, and allows EPP command and response frames to be
 modified in-flight.
 
@@ -42,6 +42,10 @@ module's options, in addition to the following:
 remote server.
 - `remote_cert` - (OPTIONAL) the certificate to use to connect to the
 remote server.
+
+Note that a limitation of the current approach is that it is not possible to
+connect to the remote server using a client certificate determined by the
+identity of the client.
 
 # REWRITING COMMANDS
 

@@ -12,10 +12,10 @@ jobs:
 
     steps:
       - name: update host
-        run: apt -yq update ; apt -yq upgrade
+        run: sudo apt -yq update ; sudo apt -yq upgrade
 
       - name: install build tools
-        run: apt -yq install libdist-zilla-plugin-git-perl libdist-zilla-plugin-podweaver-perl
+        run: sudo apt -yq install libdist-zilla-plugin-git-perl libdist-zilla-plugin-podweaver-perl
 
       - name: checkout
         uses: actions/checkout@v4

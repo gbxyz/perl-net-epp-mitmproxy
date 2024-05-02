@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: update host
-        run: sudo apt -yq update ; sudo apt -yq upgrade
+      - name: update package index
+        run: sudo apt -yq update
 
       - name: install build tools
         run: sudo apt -yq install libdist-zilla-plugin-git-perl libdist-zilla-plugin-podweaver-perl

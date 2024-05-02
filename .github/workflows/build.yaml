@@ -1,0 +1,30 @@
+name: build
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: update host
+        run: apt -yq update ; apt -yq upgrade
+
+      - name: install build tools
+        run: apt -yq install libdist-zilla-plugin-git-perl libdist-zilla-plugin-podweaver-perl
+
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: build
+        run: dzil build
+
+      - name: release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: Net-EPP-MITMProxy-*.tar.gz

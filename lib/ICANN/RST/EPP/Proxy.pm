@@ -1,12 +1,11 @@
-package ICANN::RST::EPP::Proxy;
+package Net::EPP::MITMProxy;
 # ABSTRACT: A generic EPP proxy server framework.
 use IO::Socket::SSL;
-use XML::LibXML;
 use Mozilla::CA;
 use Net::EPP::Protocol;
-use Net::EPP::ResponseCodes;
-use Socket;
 use Socket6;
+use Socket;
+use XML::LibXML;
 use base qw(Net::Server::PreFork);
 use feature qw(state);
 use constant {
@@ -21,7 +20,7 @@ use strict;
 =head1 SYNOPSIS
 
     package My::Proxy::Server;
-    use base qw(ICANN::RST::EPP::Proxy);
+    use base qw(Net::EPP::MITMProxy);
 
     sub rewrite_command {
         my ($self, $xml) = @_;
@@ -47,7 +46,7 @@ use strict;
 
 =head1 INTRODUCTION
 
-This module implements an EPP proxy server that acts as a man-in-the-middle
+This module implements an EPP proxy server that acts as a machine-in-the-middle
 between client and server, and allows EPP command and response frames to be
 modified in-flight.
 
@@ -70,6 +69,10 @@ remote server.
 
 =back
 
+Note that a limitation of the current approach is that it is not possible to
+connect to the remote server using a client certificate determined by the
+identity of the client.
+
 =cut
 
 sub run {
@@ -89,6 +92,7 @@ sub process_request {
     my ($self, $client) = @_;
 
     my $server = $self->connect_to_remote_server;
+    return unless ($server);
 
     my $frame = $self->get_frame($server);
     if (!$frame) {
@@ -111,7 +115,7 @@ sub process_request {
         my $response = $self->get_frame($server);
 
         if (!$response) {
-            $self->log(0, 'error getting respone frame from remote server');
+            $self->log(0, 'error getting response frame from remote server');
             last;
         }
 
@@ -139,7 +143,13 @@ sub connect_to_remote_server {
     my $server = IO::Socket::SSL->new(%args);
 
     if (!$server) {
-        $self->log(0, sprintf('connection to [%s]:%u failed (error=%s, SSL error=%s)', $self->{_OPT_KEY}->{remote_server}, $self->{_OPT_KEY}->{remote_port}, $!, $SSL_ERROR));
+        $self->log(0, sprintf(
+            'connection to [%s]:%u failed (error=%s, SSL error=%s)',
+            $self->{_OPT_KEY}->{remote_server},
+            $self->{_OPT_KEY}->{remote_port},
+            $!,
+            $SSL_ERROR
+        ));
         return;
     }
 

@@ -5,15 +5,16 @@ use Mozilla::CA;
 use Net::EPP::Protocol;
 use Socket6;
 use Socket;
+use SUPER;
 use XML::LibXML;
 use base qw(Net::Server::PreFork);
 use feature qw(state);
-use constant {
-    _OPT_KEY    => __PACKAGE__.'::opts',
-    HELLO       => '<epp xmlns="urn:ietf:params:xml:ns:epp-1.0"><hello/></epp>',
-};
+use vars qw($OPT_KEY $HELLO);
 use bytes;
 use strict;
+
+my $OPT_KEY = __PACKAGE__.'::opts';
+my $HELLO   = '<epp xmlns="urn:ietf:params:xml:ns:epp-1.0"><hello/></epp>';
 
 =pod
 
@@ -78,14 +79,14 @@ identity of the client.
 sub run {
     my ($self, %args) = @_;
 
-    $self->{_OPT_KEY} = {
+    $self->{$OPT_KEY} = {
         remote_server   => delete($args{remote_server}),
         remote_port     => delete($args{remote_port}) || 700,
         remote_key      => delete($args{remote_key}),
         remote_cert     => delete($args{remote_cert}),
     };
 
-    return $self->SUPER::run($self, %args);
+    super;
 }
 
 sub process_request {
@@ -100,7 +101,7 @@ sub process_request {
         return;
     }
 
-    $self->send_frame($client, $self->rewrite_response($frame, HELLO));
+    $self->send_frame($client, $self->rewrite_response($frame, $HELLO));
 
     while (1) {
         my $command = $self->get_frame($client);
@@ -129,15 +130,15 @@ sub connect_to_remote_server {
     my $self = shift;
 
     my %args = (
-        PeerHost        => $self->{_OPT_KEY}->{remote_server},
-        PeerPort        => $self->{_OPT_KEY}->{remote_port},
+        PeerHost        => $self->{$OPT_KEY}->{remote_server},
+        PeerPort        => $self->{$OPT_KEY}->{remote_port},
         SSL_verify_mode => SSL_VERIFY_PEER,
         SSL_ca_file     => Mozilla::CA::SSL_ca_file(),
     );
 
-    if ($self->{_OPT_KEY}->{remote_key} && $self->{_OPT_KEY}->{remote_cert}) {
-        $args{SSL_key_file}     = $self->{_OPT_KEY}->{remote_key};
-        $args{SSL_cert_file}    = $self->{_OPT_KEY}->{remote_cert};
+    if ($self->{$OPT_KEY}->{remote_key} && $self->{$OPT_KEY}->{remote_cert}) {
+        $args{SSL_key_file}     = $self->{$OPT_KEY}->{remote_key};
+        $args{SSL_cert_file}    = $self->{$OPT_KEY}->{remote_cert};
     }
 
     my $server = IO::Socket::SSL->new(%args);
@@ -145,8 +146,8 @@ sub connect_to_remote_server {
     if (!$server) {
         $self->log(0, sprintf(
             'connection to [%s]:%u failed (error=%s, SSL error=%s)',
-            $self->{_OPT_KEY}->{remote_server},
-            $self->{_OPT_KEY}->{remote_port},
+            $self->{$OPT_KEY}->{remote_server},
+            $self->{$OPT_KEY}->{remote_port},
             $!,
             $SSL_ERROR
         ));

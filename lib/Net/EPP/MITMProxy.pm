@@ -101,7 +101,7 @@ sub process_request {
         return;
     }
 
-    $self->send_frame($client, $self->rewrite_response($frame, $HELLO));
+    $self->send_frame($client, $self->rewrite_response($frame, $HELLO, $client));
 
     while (1) {
         my $command = $self->get_frame($client);
@@ -111,7 +111,7 @@ sub process_request {
             last;
         }
 
-        $self->send_frame($server, $self->rewrite_command($command));
+        $self->send_frame($server, $self->rewrite_command($command, $client));
 
         my $response = $self->get_frame($server);
 
@@ -120,7 +120,7 @@ sub process_request {
             last;
         }
 
-        $self->send_frame($client, $self->rewrite_response($response, $command));
+        $self->send_frame($client, $self->rewrite_response($response, $command, $client));
     }
 
     return;
@@ -177,7 +177,7 @@ To rewrite EPP commands before they're sent to the remote server, you must
 implement your own C<rewrite_command()> method.
 
     sub rewrite_command {
-        my ($self, $xml) = @_;
+        my ($self, $xml, $client) = @_;
 
         # do something to $xml here
 
@@ -203,7 +203,7 @@ To rewrite EPP commands before they're sent to the remote server, you must
 implement your own C<rewrite_response()> method.
 
     sub rewrite_response {
-        my ($self, $response_xml, $command_xml) = @_;
+        my ($self, $response_xml, $command_xml, $client) = @_;
 
         # do something to $response_xml here
 
